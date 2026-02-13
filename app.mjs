@@ -1,7 +1,7 @@
 import 'dotenv/config'
 import express from "express";
 import cors from "cors";
-import connectionPool from './data/db.mjs';
+import postRouter from './routes/postRouter.js';
 
 const app = express();
 const port = process.env.PORT || 4000;
@@ -23,18 +23,7 @@ app.get("/", (req, res) => {
   res.send("Hello TechUp!");
 });
 
-app.get("/posts",async (req, res) => {
-  try {
-    const result = await connectionPool.query("SELECT * FROM posts")
-    return res.status(200).json({
-      data : result.rows
-    })
-  } catch (error) {
-    return res.status(500).json({
-      message:"Unable to fetch posts"
-    })
-  }
-})
+app.use("/posts", postRouter)
 
 if (process.env.VERCEL !== "1") {
   app.listen(port, () => {

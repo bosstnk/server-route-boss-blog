@@ -4,7 +4,8 @@ const postRepository = {
   getPosts: async ({ category, keyword, limit, offset }) => {
     let query = `
       SELECT 
-        posts.id, 
+        posts.id,
+        users.name AS author,
         posts.image, 
         categories.name AS category, 
         posts.title, 
@@ -14,6 +15,7 @@ const postRepository = {
         statuses.status, 
         posts.likes_count
       FROM posts
+      INNER JOIN users on posts.user_id = users.id
       INNER JOIN categories ON posts.category_id = categories.id
       INNER JOIN statuses ON posts.status_id = statuses.id
     `;
@@ -119,6 +121,7 @@ const postRepository = {
   getPostById: async (postId) => {
     let query = ` SELECT
       posts.id,
+      users.name AS author,
       posts.image,
       categories.name,
       posts.title,
@@ -128,6 +131,7 @@ const postRepository = {
       statuses.status,
       posts.likes_count
     FROM posts
+    INNER JOIN users on posts.user_id = users.id
     INNER JOIN categories ON posts.category_id = categories.id
     INNER JOIN statuses ON posts.status_id = statuses.id
     WHERE posts.id = $1`

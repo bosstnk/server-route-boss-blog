@@ -99,11 +99,12 @@ const postRepository = {
     description,
     content,
     status_id,
+    user_id
   }) => {
     const query = `
       INSERT INTO posts
       (title, image, category_id, description, content, status_id)
-      VALUES ($1, $2, $3, $4, $5, $6)
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
     `;
 
     const values = [
@@ -113,6 +114,7 @@ const postRepository = {
       description,
       content,
       status_id,
+      user_id,
     ];
 
     await connectionPool.query(query, values);
@@ -123,7 +125,7 @@ const postRepository = {
       posts.id,
       users.name AS author,
       posts.image,
-      categories.name,
+      categories.name AS category,
       posts.title,
       posts.description,
       posts.date,

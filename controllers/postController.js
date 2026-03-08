@@ -16,7 +16,6 @@ const postController = {
       try {
         const {
           title,
-          image,
           category_id,
           description,
           content,
@@ -24,7 +23,7 @@ const postController = {
         } = req.body;
     
         const user_id = req.user.id;
-    
+        const image = req.file?.path || null;
         await postService.createPost({
           title,
           image,

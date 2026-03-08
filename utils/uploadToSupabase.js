@@ -7,7 +7,7 @@ const supabase = createClient(
 
 export const uploadProfileImage = async (userId, file) => {
   const bucketName = "my-personal-blog";
-  const filePath = `profiles/${userId}-${Date.now()}`;
+  const filePath = `profiles/${userId}?v=${Date.now()}`;
 
   const { data, error } = await supabase.storage
     .from(bucketName)

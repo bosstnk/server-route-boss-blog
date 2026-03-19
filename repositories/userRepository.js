@@ -7,6 +7,7 @@ const userRepository = {
       name,
       username,
       email,
+      bio,
       profile_pic AS image
     FROM users
     WHERE id = $1
@@ -15,7 +16,7 @@ const userRepository = {
     return result.rows[0];
   },
 
-  updateProfile: async (userId, { name, username, avatarUrl }) => {
+  updateProfile: async (userId, { name, username, bio, avatarUrl }) => {
     const fields = [];
     const values = [];
     let index = 1;
@@ -28,6 +29,11 @@ const userRepository = {
     if (username) {
       fields.push(`username = $${index++}`);
       values.push(username);
+    }
+
+    if (bio !== undefined) {
+      fields.push(`bio = $${index++}`);
+      values.push(bio);
     }
 
     if (avatarUrl) {
@@ -45,7 +51,7 @@ const userRepository = {
 
     await connectionPool.query(query, values);
   },
-  
+
   getUserWithPassword: async (id) => {
     const query = `
       SELECT id, password

@@ -7,7 +7,7 @@ const userService = {
         return userRepository.getUserById(id);
     },
 
-    updateProfile: async (userId, { name, username, file }) => {
+    updateProfile: async (userId, { name, username, bio, file }) => {
         let profilePicUrl = null;
 
         if (file) {
@@ -17,6 +17,7 @@ const userService = {
         await userRepository.updateProfile(userId, {
             name,
             username,
+            bio,
             avatarUrl: profilePicUrl,
         });
     },

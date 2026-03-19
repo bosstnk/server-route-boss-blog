@@ -101,12 +101,13 @@ const postRepository = {
     status_id,
     user_id
   }) => {
+  
     const query = `
       INSERT INTO posts
-      (title, image, category_id, description, content, status_id)
-      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      (title, image, category_id, description, content, status_id, user_id)
+      VALUES ($1,$2,$3,$4,$5,$6,$7)
     `;
-
+  
     const values = [
       title,
       image,
@@ -114,10 +115,11 @@ const postRepository = {
       description,
       content,
       status_id,
-      user_id,
+      user_id
     ];
-
+  
     await connectionPool.query(query, values);
+  
   },
 
   getPostById: async (postId) => {
@@ -125,6 +127,7 @@ const postRepository = {
       posts.id,
       users.name AS author,
       posts.image,
+      posts.category_id,
       categories.name AS category,
       posts.title,
       posts.description,

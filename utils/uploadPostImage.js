@@ -5,9 +5,11 @@ const supabase = createClient(
   process.env.SUPABASE_ANON_KEY
 );
 
-export const uploadProfileImage = async (userId, file) => {
+export const uploadPostImage = async (userId, file) => {
+
   const bucketName = "my-personal-blog";
-  const filePath = `profiles/${userId}-${Date.now()}`;
+
+  const filePath = `posts/${userId}-${Date.now()}`;
 
   const { data, error } = await supabase.storage
     .from(bucketName)

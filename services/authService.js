@@ -1,30 +1,65 @@
 import bcrypt from "bcrypt";
 import authRepository from "../repositories/authRepository.js";
 import jwt from "jsonwebtoken";
+import { createError, DB_ERROR } from "../utils/error.js";
 
 const authService = {
   register: async ({ name, username, email, password }) => {
+    console.log("📝 [AUTH][REGISTER] Start", { email, username });
+
     name = name.trim();
     username = username.trim();
     email = email.trim().toLowerCase();
 
+    // 🔍 check email
     const existingUser = await authRepository.findByEmail(email);
-
     if (existingUser) {
-      const error = new Error("Email already exists");
-      error.statusCode = 409;
-      throw error;
+      console.warn("⚠️ [AUTH][REGISTER] Email already exists", { email });
+      throw createError("Email already exists", 409);
     }
+
+    // 🔍 check username
+    const existingUsername = await authRepository.findByUsername(username);
+    if (existingUsername) {
+      console.warn("⚠️ [AUTH][REGISTER] Username already exists", { username });
+      throw createError("Username already exists", 409);
+    }
+
+    console.log("🔐 [AUTH][REGISTER] Hashing password");
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    await authRepository.createUser({
-      name,
-      username,
-      email,
-      password: hashedPassword,
-      role: "user",
-    });
+    try {
+      await authRepository.createUser({
+        name,
+        username,
+        email,
+        password: hashedPassword,
+        role: "user",
+      });
+
+      console.log("✅ [AUTH][REGISTER] Success", { email });
+
+    } catch (error) {
+
+      console.error("💥 [AUTH][REGISTER] DB Error", {
+        message: error.message,
+      });
+
+      if (error.code === DB_ERROR.UNIQUE) {
+        if (error.constraint === "users_username_key") {
+          console.warn("⚠️ [AUTH][REGISTER] DB username duplicate");
+          throw createError("Username already exists", 409);
+        }
+
+        if (error.constraint === "users_email_key") {
+          console.warn("⚠️ [AUTH][REGISTER] DB email duplicate");
+          throw createError("Email already exists", 409);
+        }
+      }
+
+      throw error;
+    }
 
     return {
       message: "User has been created successfully",
@@ -34,31 +69,28 @@ const authService = {
   login: async ({ email, password }) => {
     email = email.trim().toLowerCase();
 
-    // 1️⃣ หา user
-    const user = await authRepository.findByEmail(email);
+    console.log("🔐 [AUTH][LOGIN] Start", { email });
+
+    const user = await authRepository.findUser(email);
 
     if (!user) {
-      const error = new Error("Invalid email or password");
-      error.statusCode = 401;
-      throw error;
+      console.warn("⚠️ [AUTH][LOGIN] User not found", { email });
+      throw createError("Invalid email or password", 401);
     }
 
-    // 2️⃣ compare password
+    console.log("📦 [AUTH][LOGIN] User found", { userId: user.id });
+
     const isValidPassword = await bcrypt.compare(password, user.password);
 
     if (!isValidPassword) {
-      const error = new Error("Invalid email or password");
-      error.statusCode = 401;
-      throw error;
+      console.warn("⚠️ [AUTH][LOGIN] Wrong password", { userId: user.id });
+      throw createError("Invalid email or password", 401);
     }
 
-    // 3️⃣ generate JWT
+    console.log("✅ [AUTH][LOGIN] Success", { userId: user.id });
+
     const token = jwt.sign(
-      {
-        id: user.id,
-        email: user.email,
-        role: user.role,
-      },
+      { id: user.id, role: user.role },
       process.env.SECRET_KEY,
       { expiresIn: "24h" }
     );
@@ -67,7 +99,7 @@ const authService = {
       message: "Login successfully",
       token,
     };
-  },
+  }
 };
 
 export default authService;

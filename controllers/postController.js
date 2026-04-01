@@ -59,7 +59,9 @@ const postController = {
   },
 
   getPostById: async (req, res) => {
+    console.log(req.user)
     const postId = Number(req.params.postId);
+    const userId = req.user?.id || null;
 
     if (Number.isNaN(postId)) {
       return res.status(400).json({
@@ -68,7 +70,7 @@ const postController = {
     }
 
     try {
-      const post = await postService.getPostById(postId);
+      const post = await postService.getPostById(postId, userId);
 
       if (!post) {
         return res.status(404).json({

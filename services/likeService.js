@@ -23,7 +23,8 @@ const likeService = {
     const likesCount = await likeRepository.getPostLikes(postId);
 
     return {
-      likes_count: likesCount
+      likes_count: likesCount,
+      liked: !existing 
     };
 
   }

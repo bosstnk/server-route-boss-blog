@@ -2,8 +2,9 @@ import { Router } from "express";
 import postController from "../controllers/postController.js";
 import postCreateValidation from "../middlewares/postCreateValidation.js";
 import postUpdateValidation from "../middlewares/postUpdateValidation.js";
-import { protect } from "../middlewares/protect.js";
+import { protect, optionalProtect } from "../middlewares/protect.js";
 import { imageFileUpload } from "../middlewares/imageFileUpload.js";
+
 
 const postRouter = Router();
 
@@ -17,7 +18,7 @@ postRouter.post(
   postController.createPost
 );
 
-postRouter.get("/:postId", postController.getPostById);
+postRouter.get("/:postId", optionalProtect, postController.getPostById);
 
 postRouter.put(
   "/:postId",

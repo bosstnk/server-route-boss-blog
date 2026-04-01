@@ -101,13 +101,13 @@ const postRepository = {
     status_id,
     user_id
   }) => {
-  
+
     const query = `
       INSERT INTO posts
       (title, image, category_id, description, content, status_id, user_id)
       VALUES ($1,$2,$3,$4,$5,$6,$7)
     `;
-  
+
     const values = [
       title,
       image,
@@ -117,34 +117,34 @@ const postRepository = {
       status_id,
       user_id
     ];
-  
+
     await connectionPool.query(query, values);
-  
+
   },
 
-  getPostById: async (postId) => {
-    let query = ` SELECT
-      posts.id,
-      users.name AS author,
-      posts.image,
-      posts.category_id,
-      categories.name AS category,
-      posts.title,
-      posts.description,
-      posts.date,
-      posts.content,
-      statuses.status,
-      posts.likes_count
-    FROM posts
-    INNER JOIN users on posts.user_id = users.id
-    INNER JOIN categories ON posts.category_id = categories.id
-    INNER JOIN statuses ON posts.status_id = statuses.id
-    WHERE posts.id = $1`
-
-    let values = [postId]
-
-    const result = await connectionPool.query(query, values)
-
+  getPostById: async (postId, userId) => {
+    const query = `
+      SELECT
+        posts.id,
+        users.name AS author,
+        posts.image,
+        posts.category_id, 
+        categories.name AS category,
+        posts.title,
+        posts.description,
+        posts.date,
+        posts.content,
+        statuses.status,
+        posts.likes_count,
+        CASE WHEN likes.id IS NOT NULL THEN true ELSE false END AS liked
+      FROM posts
+      INNER JOIN users ON posts.user_id = users.id
+      INNER JOIN categories ON posts.category_id = categories.id
+      INNER JOIN statuses ON posts.status_id = statuses.id
+      LEFT JOIN likes ON likes.post_id = posts.id AND likes.user_id = $2
+      WHERE posts.id = $1
+    `
+    const result = await connectionPool.query(query, [postId, userId || null])
     return result.rows[0];
   },
 
@@ -152,31 +152,31 @@ const postRepository = {
     const fields = [];
     const values = [];
     let index = 1;
-  
+
     for (const [key, value] of Object.entries(postData)) {
       fields.push(`${key} = $${index}`);
       values.push(value);
       index++;
     }
-  
+
     if (fields.length === 0) {
       return null;
     }
-  
+
     values.push(postId);
-  
+
     const query = `
       UPDATE posts
       SET ${fields.join(", ")}
       WHERE id = $${index}
       RETURNING *;
     `;
-  
+
     const result = await connectionPool.query(query, values);
     return result.rows[0];
   },
 
-  deletePostById: async(postId) => {
+  deletePostById: async (postId) => {
     let query = `
     DELETE FROM posts 
     WHERE id = $1

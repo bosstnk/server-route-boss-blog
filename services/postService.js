@@ -48,8 +48,8 @@ const postService = {
     return postRepository.createPost(postData);
   },
 
-  getPostById: async (postId) => {
-    const post = await postRepository.getPostById(postId)
+  getPostById: async (postId, userId) => {
+    const post = await postRepository.getPostById(postId, userId)
 
     if (!post) {
       return null

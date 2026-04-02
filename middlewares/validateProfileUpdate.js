@@ -1,37 +1,47 @@
 export const validateProfileUpdate = (req, res, next) => {
-  const { name, username } = req.body;
+  let { name, username, bio } = req.body;
 
+  // 🔥 normalize
+  if (typeof name === "string") {
+    name = name.trim();
+    req.body.name = name;
+  }
+
+  if (typeof username === "string") {
+    username = username.trim();
+    req.body.username = username;
+  }
+
+  if (typeof bio === "string") {
+    bio = bio.trim();
+    req.body.bio = bio;
+  }
+
+  const errors = {};
+
+  // ✅ validate
   if (name !== undefined) {
-    if (typeof name !== "string" || name.trim().length === 0 || name.length > 100) {
-      return res.status(400).json({
-        message: "Name cannot be empty or exceed 100 characters",
-      });
+    if (name.length === 0 || name.length > 100) {
+      errors.name = "Name must be between 1-100 characters";
     }
   }
 
   if (username !== undefined) {
-    if (
-      typeof username !== "string" ||
-      username.trim().length === 0 ||
-      username.length > 50
-    ) {
-      return res.status(400).json({
-        message: "Username cannot be empty or exceed 50 characters",
-      });
+    if (username.length === 0 || username.length > 50) {
+      errors.username = "Username must be between 1-50 characters";
     }
   }
-  
-  if (req.body.bio !== undefined) {
-    if (
-      typeof req.body.bio !== "string" ||
-      req.body.bio.length > 120
-    ) {
-      return res.status(400).json({
-        message: "Bio must be less than 120 characters",
-      });
+
+  if (bio !== undefined) {
+    if (bio.length > 120) {
+      errors.bio = "Bio must be less than 120 characters";
     }
+  }
+
+  // ❌ มี error → return ทีเดียว
+  if (Object.keys(errors).length > 0) {
+    return res.status(400).json({ errors });
   }
 
   next();
 };
-

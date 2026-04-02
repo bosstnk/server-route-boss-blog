@@ -8,6 +8,7 @@ const userRepository = {
       username,
       email,
       bio,
+      role,
       profile_pic AS image
     FROM users
     WHERE id = $1

@@ -1,5 +1,4 @@
 import postService from "../services/postService.js";
-import { uploadPostImage } from "../utils/uploadPostImage.js";
 
 const postController = {
   getPosts: async (req, res) => {

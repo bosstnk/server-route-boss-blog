@@ -1,9 +1,15 @@
 import connectionPool from "../utils/db.mjs";
 
 const authRepository = {
-  findByEmail: async (email) => {
+  findUser: async (email) => {
     const query = `SELECT * FROM users WHERE email = $1`;
     const result = await connectionPool.query(query, [email]);
+    return result.rows[0];
+  },
+
+  findByUsername: async (username) => {
+    const query = `SELECT * FROM users WHERE username = $1`;
+    const result = await connectionPool.query(query, [username]);
     return result.rows[0];
   },
 

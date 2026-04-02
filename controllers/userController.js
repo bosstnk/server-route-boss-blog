@@ -24,13 +24,14 @@ const userController = {
   },
   updateProfile: async (req, res) => {
     const userId = req.user.id;
-    const { name, username } = req.body;
+    const { name, username, bio } = req.body;
     const file = req.files?.imageFile?.[0];
 
     try {
       await userService.updateProfile(userId, {
         name,
         username,
+        bio,
         file,
       });
 
@@ -40,7 +41,8 @@ const userController = {
     } catch (error) {
       // ⭐ สำคัญมาก
       console.error("UPDATE PROFILE ERROR:", error);
-
+      console.log(req.files);
+      console.log(req.body);
       return res.status(500).json({
         message: "Failed to update profile",
         error: error.message, // ⭐ ส่ง message กลับมาด้วย

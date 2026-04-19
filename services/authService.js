@@ -12,7 +12,7 @@ const authService = {
     email = email.trim().toLowerCase();
 
     // 🔍 check email
-    const existingUser = await authRepository.findByEmail(email);
+    const existingUser = await authRepository.findUser(email);
     if (existingUser) {
       console.warn("⚠️ [AUTH][REGISTER] Email already exists", { email });
       throw createError("Email already exists", 409);

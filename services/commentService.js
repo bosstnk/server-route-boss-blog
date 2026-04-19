@@ -1,4 +1,5 @@
 import commentRepository from "../repositories/commentRepository.js";
+import notificationService from "./notificationService.js";
 
 const commentService = {
 
@@ -12,11 +13,17 @@ const commentService = {
       throw new Error("Comment cannot be empty");
     }
 
-    return commentRepository.createComment({
+    const newComment = await commentRepository.createComment({
       postId,
       userId,
-      comment_text
+      comment_text,
     });
+
+    notificationService
+      .notifyComment({ postId, actorId: userId, commentId: newComment.id })
+      .catch((err) => console.error("💥 [NOTIFY][COMMENT] Failed", err));
+
+    return newComment;
   },
 
   deleteComment: async (commentId, userId) => {

@@ -1,4 +1,5 @@
 import likeRepository from "../repositories/likeRepository.js";
+import notificationService from "./notificationService.js";
 
 const likeService = {
 
@@ -15,8 +16,11 @@ const likeService = {
     } else {
 
       await likeRepository.createLike(postId, userId);
-
       await likeRepository.increasePostLike(postId);
+
+      notificationService
+        .notifyLike({ postId, actorId: userId })
+        .catch((err) => console.error("💥 [NOTIFY][LIKE] Failed", err));
 
     }
 

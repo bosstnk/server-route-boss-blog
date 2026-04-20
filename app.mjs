@@ -15,11 +15,15 @@ const port = process.env.PORT || 4000;
 
 app.use(
   cors({
-    origin: [
-      "http://localhost:5173",
-      "http://localhost:3000",
-      "https://route-boss-blog-git-dev-boss-projects-a246840e.vercel.app/",
-    ],
+    origin: (origin, callback) => {
+      const allowed = ["http://localhost:5173", "http://localhost:3000"];
+      const isVercel = origin && origin.endsWith(".vercel.app");
+      if (!origin || allowed.includes(origin) || isVercel) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   })
 );

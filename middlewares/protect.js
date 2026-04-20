@@ -1,36 +1,64 @@
 import jwt from "jsonwebtoken";
 
-export const protect = async (req, res, next) => {
-    const token = req.headers.authorization;
+export const protect = (req, res, next) => {
+  const authHeader = req.headers.authorization;
 
-    if(!token || !token.startsWith("Bearer ")) {
-        return res.status(401).json({
-            message: "Token has invalid format"
-        })
-    }
+  console.log("🔐 [AUTH][PROTECT] Start");
 
-    const tokenWithoutBearer  = token.split(" ")[1];
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    console.warn("⚠️ [AUTH][PROTECT] Missing or invalid token format");
 
-    jwt.verify(tokenWithoutBearer, process.env.SECRET_KEY,(err,payload) => {
-        if (err) {
-            return res.status(401).json({
-                message: "Token is invalid"
-            });
-        }
-        req.user = payload
+    return res.status(401).json({
+      message: "Token has invalid format",
+    });
+  }
 
-        next();
-    })
-}
+  const token = authHeader.split(" ")[1];
+
+  try {
+    const payload = jwt.verify(token, process.env.SECRET_KEY);
+
+    console.log("✅ [AUTH][PROTECT] Success", {
+      userId: payload.id,
+      role: payload.role,
+    });
+
+    req.user = payload;
+    next();
+
+  } catch (error) {
+    console.warn("⚠️ [AUTH][PROTECT] Invalid token", {
+      message: error.message,
+    });
+
+    return res.status(401).json({
+      message: "Token is invalid",
+    });
+  }
+};
 
 export const optionalProtect = (req, res, next) => {
-    try {
-      const token = req.headers.authorization?.split(" ")[1];
-      if (!token) return next(); // ไม่มี token ก็ผ่านได้
-      const decoded = jwt.verify(token, process.env.SECRET_KEY);
-      req.user = decoded;
-    } catch {
-      // token invalid ก็ผ่านได้เหมือนกัน
+  try {
+    const token = req.headers.authorization?.split(" ")[1];
+
+    if (!token) {
+      console.log("ℹ️ [AUTH][OPTIONAL] No token");
+      return next();
     }
-    next();
-  };
+
+    const decoded = jwt.verify(token, process.env.SECRET_KEY);
+
+    console.log("✅ [AUTH][OPTIONAL] User detected", {
+      userId: decoded.id,
+    });
+
+    req.user = decoded;
+
+  } catch (error) {
+    console.warn("⚠️ [AUTH][OPTIONAL] Invalid token ignored", {
+      message: error.message,
+    });
+  }
+
+  next();
+};

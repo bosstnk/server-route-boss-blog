@@ -1,36 +1,73 @@
 import postService from "../services/postService.js";
-import { uploadPostImage } from "../utils/uploadPostImage.js";
+import { uploadImage } from "../utils/uploadToSupabase.js";
 
 const postController = {
   getPosts: async (req, res) => {
     try {
       const result = await postService.getPosts(req.query);
+
+      console.log("✅ [POST][GET_ALL][RESPONSE]");
+
       return res.status(200).json(result);
     } catch (error) {
+
+      if (error.statusCode) {
+        console.warn("⚠️ [POST][GET_ALL][BUSINESS]", {
+          message: error.message,
+        });
+
+        return res.status(error.statusCode).json({
+          message: error.message,
+        });
+      }
+
+      console.error("💥 [POST][GET_ALL][SYSTEM]", {
+        message: error.message,
+      });
+
       return res.status(500).json({
-        message: "Server could not read post because database connection",
+        message: "Internal server error",
+      });
+    }
+  },
+
+  getAdminPosts: async (req, res) => {
+    try {
+      const result = await postService.getAdminPosts(req.query);
+
+      console.log("✅ [POST][ADMIN_GET_ALL][RESPONSE]");
+
+      return res.status(200).json(result);
+    } catch (error) {
+
+      if (error.statusCode) {
+        console.warn("⚠️ [POST][ADMIN_GET_ALL][BUSINESS]", {
+          message: error.message,
+        });
+
+        return res.status(error.statusCode).json({
+          message: error.message,
+        });
+      }
+
+      console.error("💥 [POST][ADMIN_GET_ALL][SYSTEM]", {
+        message: error.message,
+      });
+
+      return res.status(500).json({
+        message: "Internal server error",
       });
     }
   },
 
   createPost: async (req, res) => {
-    console.log("BODY:", req.body);
-    console.log("FILES:", req.files);
     try {
-      const {
-        title,
-        category_id,
-        description,
-        content,
-        status_id,
-      } = req.body;
-
+      const { title, category_id, description, content, status_id } = req.body;
       const user_id = req.user.id;
 
       let image = null;
-
       if (req.files?.imageFile?.[0]) {
-        image = await uploadPostImage(user_id, req.files.imageFile[0]);
+        image = await uploadImage("posts", user_id, req.files.imageFile[0]);
       }
 
       await postService.createPost({
@@ -43,92 +80,90 @@ const postController = {
         user_id,
       });
 
+      console.log("✅ [POST][CREATE][RESPONSE]");
+
       return res.status(201).json({
         message: "Created post successfully",
       });
 
     } catch (error) {
 
-      console.error(error);
+      if (error.statusCode) {
+        console.warn("⚠️ [POST][CREATE][BUSINESS]", { message: error.message });
+        return res.status(error.statusCode).json({ message: error.message });
+      }
 
-      return res.status(500).json({
-        message: "Server could not create post",
-      });
-
+      console.error("💥 [POST][CREATE][SYSTEM]", { message: error.message });
+      return res.status(500).json({ message: "Internal server error" });
     }
   },
 
   getPostById: async (req, res) => {
-    console.log(req.user)
     const postId = Number(req.params.postId);
     const userId = req.user?.id || null;
 
     if (Number.isNaN(postId)) {
-      return res.status(400).json({
-        message: "Invalid post id",
-      });
+      console.warn("⚠️ [POST][GET_BY_ID][BUSINESS]", { message: "Invalid post id" });
+      return res.status(400).json({ message: "Invalid post id" });
     }
 
     try {
       const post = await postService.getPostById(postId, userId);
 
       if (!post) {
-        return res.status(404).json({
-          message: "Server could not find a requested post",
-        });
+        console.warn("⚠️ [POST][GET_BY_ID][BUSINESS]", { message: "Post not found", postId });
+        return res.status(404).json({ message: "Server could not find a requested post" });
       }
 
+      console.log("✅ [POST][GET_BY_ID][RESPONSE]");
       return res.status(200).json(post);
     } catch (error) {
-      console.error(error);
-      return res.status(500).json({
-        message: "Server could not read post because database connection",
-      });
+
+      if (error.statusCode) {
+        console.warn("⚠️ [POST][GET_BY_ID][BUSINESS]", { message: error.message });
+        return res.status(error.statusCode).json({ message: error.message });
+      }
+
+      console.error("💥 [POST][GET_BY_ID][SYSTEM]", { message: error.message });
+      return res.status(500).json({ message: "Internal server error" });
     }
   },
 
   updatePostById: async (req, res) => {
     const postId = Number(req.params.postId);
-    console.log("FILES:", req.files);
+
     if (Number.isNaN(postId)) {
-      return res.status(400).json({
-        message: "Invalid post id",
-      });
+      console.warn("⚠️ [POST][UPDATE_BY_ID][BUSINESS]", { message: "Invalid post id" });
+      return res.status(400).json({ message: "Invalid post id" });
     }
 
-    const user_id = req.user.id;
     try {
+      const user_id = req.user.id;
 
       let updateData = { ...req.body };
       if (req.files?.imageFile?.[0]) {
-        const image = await uploadPostImage(
-          user_id,
-          req.files.imageFile[0]
-        );
-
-        updateData.image = image; // 👈 ใส่ลงไปใน data
+        updateData.image = await uploadImage("posts", user_id, req.files.imageFile[0]);
       }
 
-      const post = await postService.updatePostById(
-        postId,
-        updateData
-      );
+      const post = await postService.updatePostById(postId, updateData, user_id);
 
       if (!post) {
-        return res.status(404).json({
-          message: "Server could not find a requested post",
-        });
+        console.warn("⚠️ [POST][UPDATE_BY_ID][BUSINESS]", { message: "Post not found", postId });
+        return res.status(404).json({ message: "Server could not find a requested post" });
       }
 
-      return res.status(200).json({
-        "message": "Updated post successfully"
-      })
-    } catch (error) {
-      console.error("UPDATE ERROR:", error); // 👈 สำคัญมาก
+      console.log("✅ [POST][UPDATE_BY_ID][RESPONSE]");
+      return res.status(200).json({ message: "Updated post successfully" });
 
-      return res.status(500).json({
-        message: error.message, // 👈 ส่ง error จริงออกมา
-      });
+    } catch (error) {
+
+      if (error.statusCode) {
+        console.warn("⚠️ [POST][UPDATE_BY_ID][BUSINESS]", { message: error.message });
+        return res.status(error.statusCode).json({ message: error.message });
+      }
+
+      console.error("💥 [POST][UPDATE_BY_ID][SYSTEM]", { message: error.message });
+      return res.status(500).json({ message: "Internal server error" });
     }
   },
 
@@ -136,27 +171,31 @@ const postController = {
     const postId = Number(req.params.postId);
 
     if (Number.isNaN(postId)) {
-      return res.status(400).json({
-        message: "Invalid post id",
-      });
+      console.warn("⚠️ [POST][DELETE_BY_ID][BUSINESS]", { message: "Invalid post id" });
+      return res.status(400).json({ message: "Invalid post id" });
     }
 
     try {
-      const post = await postService.deletePostById(postId)
+      const user_id = req.user.id;
+      const post = await postService.deletePostById(postId, user_id);
 
       if (!post) {
-        return res.status(404).json({
-          message: "Server could not find a requested post",
-        });
+        console.warn("⚠️ [POST][DELETE_BY_ID][BUSINESS]", { message: "Post not found", postId });
+        return res.status(404).json({ message: "Server could not find a requested post" });
       }
 
-      return res.status(200).json({
-        "message": "Deleted post successfully"
-      })
+      console.log("✅ [POST][DELETE_BY_ID][RESPONSE]");
+      return res.status(200).json({ message: "Deleted post successfully" });
+
     } catch (error) {
-      return res.status(500).json({
-        "message": "Server could not delete post because database connection"
-      })
+
+      if (error.statusCode) {
+        console.warn("⚠️ [POST][DELETE_BY_ID][BUSINESS]", { message: error.message });
+        return res.status(error.statusCode).json({ message: error.message });
+      }
+
+      console.error("💥 [POST][DELETE_BY_ID][SYSTEM]", { message: error.message });
+      return res.status(500).json({ message: "Internal server error" });
     }
   }
 };

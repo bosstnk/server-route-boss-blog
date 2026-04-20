@@ -8,6 +8,7 @@ import categoryRouter from './routes/categoryRouter.js';
 import commentRouter from './routes/commentRouter.js';
 import likeRouter from './routes/likeRouter.js';
 import notificationRouter from './routes/notificationRouter.js';
+import adminPostRouter from './routes/adminPostRouter.js';
 
 const app = express();
 const port = process.env.PORT || 4000;
@@ -33,7 +34,8 @@ app.use("/posts", postRouter)
 app.use("/posts", commentRouter);
 app.use("/posts", likeRouter);
 app.use("/categories", categoryRouter);
-app.use("/admin",notificationRouter)
+app.use("/admin", notificationRouter)
+app.use("/admin", adminPostRouter)
 app.use("/auth", authRouter)
 app.use("/user", userRouter)
 

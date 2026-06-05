@@ -14,11 +14,12 @@ const postController = {
       if (error.statusCode) {
         console.warn("⚠️ [POST][GET_ALL][BUSINESS]", {
           message: error.message,
+          errors: error.errors,
         });
 
-        return res.status(error.statusCode).json({
-          message: error.message,
-        });
+        const body = { message: error.message };
+        if (error.errors) body.errors = error.errors;
+        return res.status(error.statusCode).json(body);
       }
 
       console.error("💥 [POST][GET_ALL][SYSTEM]", {
@@ -43,11 +44,12 @@ const postController = {
       if (error.statusCode) {
         console.warn("⚠️ [POST][ADMIN_GET_ALL][BUSINESS]", {
           message: error.message,
+          errors: error.errors,
         });
 
-        return res.status(error.statusCode).json({
-          message: error.message,
-        });
+        const body = { message: error.message };
+        if (error.errors) body.errors = error.errors;
+        return res.status(error.statusCode).json(body);
       }
 
       console.error("💥 [POST][ADMIN_GET_ALL][SYSTEM]", {
@@ -89,8 +91,13 @@ const postController = {
     } catch (error) {
 
       if (error.statusCode) {
-        console.warn("⚠️ [POST][CREATE][BUSINESS]", { message: error.message });
-        return res.status(error.statusCode).json({ message: error.message });
+        console.warn("⚠️ [POST][CREATE][BUSINESS]", {
+          message: error.message,
+          errors: error.errors,
+        });
+        const body = { message: error.message };
+        if (error.errors) body.errors = error.errors;
+        return res.status(error.statusCode).json(body);
       }
 
       console.error("💥 [POST][CREATE][SYSTEM]", { message: error.message });
@@ -120,8 +127,13 @@ const postController = {
     } catch (error) {
 
       if (error.statusCode) {
-        console.warn("⚠️ [POST][GET_BY_ID][BUSINESS]", { message: error.message });
-        return res.status(error.statusCode).json({ message: error.message });
+        console.warn("⚠️ [POST][GET_BY_ID][BUSINESS]", {
+          message: error.message,
+          errors: error.errors,
+        });
+        const body = { message: error.message };
+        if (error.errors) body.errors = error.errors;
+        return res.status(error.statusCode).json(body);
       }
 
       console.error("💥 [POST][GET_BY_ID][SYSTEM]", { message: error.message });
@@ -158,8 +170,13 @@ const postController = {
     } catch (error) {
 
       if (error.statusCode) {
-        console.warn("⚠️ [POST][UPDATE_BY_ID][BUSINESS]", { message: error.message });
-        return res.status(error.statusCode).json({ message: error.message });
+        console.warn("⚠️ [POST][UPDATE_BY_ID][BUSINESS]", {
+          message: error.message,
+          errors: error.errors,
+        });
+        const body = { message: error.message };
+        if (error.errors) body.errors = error.errors;
+        return res.status(error.statusCode).json(body);
       }
 
       console.error("💥 [POST][UPDATE_BY_ID][SYSTEM]", { message: error.message });
@@ -190,8 +207,13 @@ const postController = {
     } catch (error) {
 
       if (error.statusCode) {
-        console.warn("⚠️ [POST][DELETE_BY_ID][BUSINESS]", { message: error.message });
-        return res.status(error.statusCode).json({ message: error.message });
+        console.warn("⚠️ [POST][DELETE_BY_ID][BUSINESS]", {
+          message: error.message,
+          errors: error.errors,
+        });
+        const body = { message: error.message };
+        if (error.errors) body.errors = error.errors;
+        return res.status(error.statusCode).json(body);
       }
 
       console.error("💥 [POST][DELETE_BY_ID][SYSTEM]", { message: error.message });

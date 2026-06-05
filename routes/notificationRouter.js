@@ -10,4 +10,10 @@ notificationRouter.get(
   notificationController.getNotifications
 );
 
+notificationRouter.patch(
+  "/notifications/read-all",
+  protect,
+  notificationController.markAllAsRead
+);
+
 export default notificationRouter;

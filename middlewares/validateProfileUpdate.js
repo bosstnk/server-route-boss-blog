@@ -38,9 +38,25 @@ export const validateProfileUpdate = (req, res, next) => {
     }
   }
 
+  // 🖼️ validate image (multer parse ก่อนถึง middleware นี้)
+  const file = req.files?.imageFile?.[0];
+
+  if (file) {
+    const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+
+    if (!allowedTypes.includes(file.mimetype)) {
+      errors.image = "Only JPG, PNG, WEBP are allowed";
+    } else if (file.size > 2 * 1024 * 1024) {
+      errors.image = "Image must be less than 2MB";
+    }
+  }
+
   // ❌ มี error → return ทีเดียว
   if (Object.keys(errors).length > 0) {
-    return res.status(400).json({ errors });
+    return res.status(400).json({
+      message: "Validation failed",
+      errors,
+    });
   }
 
   next();

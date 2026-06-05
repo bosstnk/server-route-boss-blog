@@ -1,5 +1,6 @@
 import commentRepository from "../repositories/commentRepository.js";
 import notificationService from "./notificationService.js";
+import { createError } from "../utils/error.js";
 
 const commentService = {
 
@@ -10,7 +11,7 @@ const commentService = {
   createComment: async ({ postId, userId, comment_text }) => {
 
     if (!comment_text || comment_text.trim() === "") {
-      throw new Error("Comment cannot be empty");
+      throw createError({ message: "Comment cannot be empty", statusCode: 422 });
     }
 
     const newComment = await commentRepository.createComment({
@@ -31,11 +32,11 @@ const commentService = {
     const comment = await commentRepository.getCommentById(commentId);
 
     if (!comment) {
-      throw new Error("Comment not found");
+      throw createError({ message: "Comment not found", statusCode: 404 });
     }
 
     if (comment.user_id !== userId) {
-      throw new Error("Not allowed to delete this comment");
+      throw createError({ message: "Not allowed to delete this comment", statusCode: 403 });
     }
 
     return commentRepository.deleteComment(commentId);

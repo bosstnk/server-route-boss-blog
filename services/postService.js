@@ -44,18 +44,19 @@ const postService = {
   getAdminPosts: async (queryParams) => {
     const category = queryParams.category || "";
     const keyword = queryParams.keyword || "";
+    const status = queryParams.status || "";
     const page = Number(queryParams.page) || 1;
     const limit = Number(queryParams.limit) || 6;
 
-    console.log("📝 [POST][ADMIN_GET_ALL] Start", { category, keyword, page, limit });
+    console.log("📝 [POST][ADMIN_GET_ALL] Start", { category, keyword, status, page, limit });
 
     const safePage = Math.max(1, page);
     const safeLimit = Math.max(1, Math.min(100, limit));
     const offset = (safePage - 1) * safeLimit;
 
     const [postsResult, totalPosts] = await Promise.all([
-      postRepository.getAdminPosts({ category, keyword, limit: safeLimit, offset }),
-      postRepository.countAdminPosts({ category, keyword }),
+      postRepository.getAdminPosts({ category, keyword, status, limit: safeLimit, offset }),
+      postRepository.countAdminPosts({ category, keyword, status }),
     ]);
 
     const results = {
@@ -119,7 +120,10 @@ const postService = {
 
     if (currentPost.user_id !== userId) {
       console.warn("⚠️ [POST][UPDATE_BY_ID] Forbidden", { postId, userId });
-      throw createError("You are not allowed to update this post", 403);
+      throw createError({
+        message: "You are not allowed to update this post",
+        statusCode: 403,
+      });
     }
 
     const isFirstPublish = currentPost.status_id !== 2 && Number(postData.status_id) === 2;
@@ -149,7 +153,10 @@ const postService = {
 
     if (currentPost.user_id !== userId) {
       console.warn("⚠️ [POST][DELETE_BY_ID] Forbidden", { postId, userId });
-      throw createError("You are not allowed to delete this post", 403);
+      throw createError({
+        message: "You are not allowed to delete this post",
+        statusCode: 403,
+      });
     }
 
     const post = await postRepository.deletePostById(postId);

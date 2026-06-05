@@ -14,9 +14,15 @@ const categoryController = {
       return res.json(categories);
     } catch (error) {
       if (error.statusCode) {
-        return res.status(error.statusCode).json({ message: error.message });
+        console.warn("⚠️ [CATEGORY][GET][BUSINESS]", {
+          message: error.message,
+          errors: error.errors,
+        });
+        const body = { message: error.message };
+        if (error.errors) body.errors = error.errors;
+        return res.status(error.statusCode).json(body);
       }
-      console.error("💥 [CATEGORY][GET][SYSTEM]", error);
+      console.error("💥 [CATEGORY][GET][SYSTEM]", { message: error.message });
       return res.status(500).json({ message: "Internal server error" });
     }
   },
@@ -33,9 +39,15 @@ const categoryController = {
       return res.json(category);
     } catch (error) {
       if (error.statusCode) {
-        return res.status(error.statusCode).json({ message: error.message });
+        console.warn("⚠️ [CATEGORY][GET_BY_ID][BUSINESS]", {
+          message: error.message,
+          errors: error.errors,
+        });
+        const body = { message: error.message };
+        if (error.errors) body.errors = error.errors;
+        return res.status(error.statusCode).json(body);
       }
-      console.error("💥 [CATEGORY][GET_BY_ID][SYSTEM]", error);
+      console.error("💥 [CATEGORY][GET_BY_ID][SYSTEM]", { message: error.message });
       return res.status(500).json({ message: "Internal server error" });
     }
   },
@@ -52,9 +64,15 @@ const categoryController = {
       return res.status(201).json(category);
     } catch (error) {
       if (error.statusCode) {
-        return res.status(error.statusCode).json({ message: error.message });
+        console.warn("⚠️ [CATEGORY][CREATE][BUSINESS]", {
+          message: error.message,
+          errors: error.errors,
+        });
+        const body = { message: error.message };
+        if (error.errors) body.errors = error.errors;
+        return res.status(error.statusCode).json(body);
       }
-      console.error("💥 [CATEGORY][CREATE][SYSTEM]", error);
+      console.error("💥 [CATEGORY][CREATE][SYSTEM]", { message: error.message });
       return res.status(500).json({ message: "Internal server error" });
     }
   },
@@ -72,9 +90,15 @@ const categoryController = {
       return res.json(category);
     } catch (error) {
       if (error.statusCode) {
-        return res.status(error.statusCode).json({ message: error.message });
+        console.warn("⚠️ [CATEGORY][UPDATE][BUSINESS]", {
+          message: error.message,
+          errors: error.errors,
+        });
+        const body = { message: error.message };
+        if (error.errors) body.errors = error.errors;
+        return res.status(error.statusCode).json(body);
       }
-      console.error("💥 [CATEGORY][UPDATE][SYSTEM]", error);
+      console.error("💥 [CATEGORY][UPDATE][SYSTEM]", { message: error.message });
       return res.status(500).json({ message: "Internal server error" });
     }
   },
@@ -91,9 +115,15 @@ const categoryController = {
       return res.json({ message: "Category deleted successfully" });
     } catch (error) {
       if (error.statusCode) {
-        return res.status(error.statusCode).json({ message: error.message });
+        console.warn("⚠️ [CATEGORY][DELETE][BUSINESS]", {
+          message: error.message,
+          errors: error.errors,
+        });
+        const body = { message: error.message };
+        if (error.errors) body.errors = error.errors;
+        return res.status(error.statusCode).json(body);
       }
-      console.error("💥 [CATEGORY][DELETE][SYSTEM]", error);
+      console.error("💥 [CATEGORY][DELETE][SYSTEM]", { message: error.message });
       return res.status(500).json({ message: "Internal server error" });
     }
   },

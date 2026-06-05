@@ -11,18 +11,27 @@ const authService = {
     username = username.trim();
     email = email.trim().toLowerCase();
 
+    const errors = {};
+
     // 🔍 check email
     const existingUser = await authRepository.findUser(email);
     if (existingUser) {
       console.warn("⚠️ [AUTH][REGISTER] Email already exists", { email });
-      throw createError("Email already exists", 409);
+      errors.email = "Email already exists";
     }
-
     // 🔍 check username
     const existingUsername = await authRepository.findByUsername(username);
     if (existingUsername) {
       console.warn("⚠️ [AUTH][REGISTER] Username already exists", { username });
-      throw createError("Username already exists", 409);
+      errors.username = "Username already exists";
+    }
+
+    if (Object.keys(errors).length > 0) {
+      throw createError({
+        message: "Validation failed",
+        statusCode: 409,
+        errors,
+      });
     }
 
     console.log("🔐 [AUTH][REGISTER] Hashing password");
@@ -30,7 +39,7 @@ const authService = {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     try {
-      await authRepository.createUser({
+      const newUserId = await authRepository.createUser({
         name,
         username,
         email,
@@ -39,6 +48,14 @@ const authService = {
       });
 
       console.log("✅ [AUTH][REGISTER] Success", { email });
+
+      const token = jwt.sign(
+        { id: newUserId, role: "user" },
+        process.env.SECRET_KEY,
+        { expiresIn: "24h" }
+      );
+
+      return { token };
 
     } catch (error) {
 
@@ -49,21 +66,29 @@ const authService = {
       if (error.code === DB_ERROR.UNIQUE) {
         if (error.constraint === "users_username_key") {
           console.warn("⚠️ [AUTH][REGISTER] DB username duplicate");
-          throw createError("Username already exists", 409);
+          throw createError({
+            message: "Username already exists",
+            statusCode: 409,
+            errors: {
+              username: "Username already exists",
+            },
+          });
         }
 
         if (error.constraint === "users_email_key") {
           console.warn("⚠️ [AUTH][REGISTER] DB email duplicate");
-          throw createError("Email already exists", 409);
+          throw createError({
+            message: "Email already exists",
+            statusCode: 409,
+            errors: {
+              email: "Email already exists",
+            },
+          });
         }
       }
 
       throw error;
     }
-
-    return {
-      message: "User has been created successfully",
-    };
   },
 
   login: async ({ email, password }) => {
@@ -75,7 +100,10 @@ const authService = {
 
     if (!user) {
       console.warn("⚠️ [AUTH][LOGIN] User not found", { email });
-      throw createError("Invalid email or password", 401);
+      throw createError({
+        message: "Invalid email or password",
+        statusCode: 401,
+      });
     }
 
     console.log("📦 [AUTH][LOGIN] User found", { userId: user.id });
@@ -84,7 +112,10 @@ const authService = {
 
     if (!isValidPassword) {
       console.warn("⚠️ [AUTH][LOGIN] Wrong password", { userId: user.id });
-      throw createError("Invalid email or password", 401);
+      throw createError({
+        message: "Invalid email or password",
+        statusCode: 401,
+      });
     }
 
     console.log("✅ [AUTH][LOGIN] Success", { userId: user.id });

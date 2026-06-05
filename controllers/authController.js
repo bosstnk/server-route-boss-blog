@@ -14,11 +14,12 @@ const authController = {
       if (error.statusCode) {
         console.warn("⚠️ [AUTH][REGISTER][BUSINESS]", {
           message: error.message,
+          errors: error.errors,
         });
 
-        return res.status(error.statusCode).json({
-          message: error.message,
-        });
+        const body = { message: error.message };
+        if (error.errors) body.errors = error.errors;
+        return res.status(error.statusCode).json(body);
       }
 
       console.error("💥 [AUTH][REGISTER][SYSTEM]", {
@@ -45,9 +46,9 @@ const authController = {
       if (error.statusCode) {
         console.warn("⚠️ [AUTH][LOGIN][BUSINESS]", error.message);
 
-        return res.status(error.statusCode).json({
-          message: error.message,
-        });
+        const body = { message: error.message };
+        if (error.errors) body.errors = error.errors;
+        return res.status(error.statusCode).json(body);
       }
 
       console.error("💥 [AUTH][LOGIN][SYSTEM]", error.message);

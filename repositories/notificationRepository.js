@@ -92,6 +92,15 @@ const notificationRepository = {
     );
     return result.rows.length > 0;
   },
+
+  markAllAsRead: async (userId) => {
+    await connectionPool.query(
+      `UPDATE notifications
+       SET is_read = true
+       WHERE user_id = $1 AND is_read IS NOT TRUE`,
+      [userId]
+    );
+  },
 };
 
 export default notificationRepository;

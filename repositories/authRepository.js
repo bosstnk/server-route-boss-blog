@@ -17,11 +17,13 @@ const authRepository = {
     const query = `
       INSERT INTO users (name, username, email, password, role)
       VALUES ($1, $2, $3, $4, $5)
+      RETURNING id
     `;
 
     const values = [name, username, email, password, role];
 
-    await connectionPool.query(query, values);
+    const result = await connectionPool.query(query, values);
+    return result.rows[0].id;
   },
 };
 

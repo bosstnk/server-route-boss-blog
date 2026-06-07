@@ -1,6 +1,7 @@
 import userRepository from "../repositories/userRepository.js";
 import bcrypt from "bcrypt";
 import { uploadImage } from "../utils/uploadToSupabase.js";
+import { createError } from "../utils/error.js";
 
 const userService = {
     getUserById: async (id) => {
@@ -35,29 +36,23 @@ const userService = {
         let profilePicUrl = null;
 
         try {
+            // 🔍 check duplicate username (ยกเว้นตัวเอง)
+            if (username) {
+                const existing = await userRepository.findByUsername(username);
+
+                if (existing && String(existing.id) !== String(userId)) {
+                    console.warn("⚠️ [USER][SERVICE][UPDATE PROFILE] Duplicate username", {
+                        username,
+                    });
+                    throw createError({
+                        message: "Validation failed",
+                        statusCode: 409,
+                        errors: { username: "Username already exists" },
+                    });
+                }
+            }
+
             if (file) {
-                console.log("📤 [USER][SERVICE][UPLOAD IMAGE] Validating...");
-
-                // 🎯 1. validate mime type
-                const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
-
-                if (!allowedTypes.includes(file.mimetype)) {
-                    console.warn("⚠️ [USER][SERVICE][UPLOAD IMAGE] Invalid file type", {
-                        type: file.mimetype,
-                    });
-                    throw new Error("Only JPG, PNG, WEBP are allowed");
-                }
-
-                // 🎯 2. validate size (2MB)
-                const MAX_SIZE = 2 * 1024 * 1024;
-
-                if (file.size > MAX_SIZE) {
-                    console.warn("⚠️ [USER][SERVICE][UPLOAD IMAGE] File too large", {
-                        size: file.size,
-                    });
-                    throw new Error("File size must be less than 2MB");
-                }
-
                 console.log("📤 [USER][SERVICE][UPLOAD IMAGE] Uploading...");
 
                 profilePicUrl = await uploadImage("profiles", userId, file);
@@ -90,16 +85,17 @@ const userService = {
             const user = await userRepository.getUserWithPassword(userId);
 
             if (!user) {
-                throw new Error("User not found");
+                throw createError({ message: "User not found", statusCode: 404 });
             }
 
             const isMatch = await bcrypt.compare(currentPassword, user.password);
 
             if (!isMatch) {
-                const error = new Error("Current password is incorrect");
-                error.field = "currentPassword"; // ⭐ KEY สำคัญ
-                error.statusCode = 400;
-                throw error;
+                throw createError({
+                    message: "Validation failed",
+                    statusCode: 400,
+                    errors: { currentPassword: "Current password is incorrect" },
+                });
             }
 
             const hashedPassword = await bcrypt.hash(newPassword, 10);

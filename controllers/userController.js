@@ -21,13 +21,25 @@ const userController = {
 
       return res.json(user);
     } catch (error) {
-      console.error("💥 [USER][GET PROFILE] Error", {
+      if (error.statusCode) {
+        console.warn("⚠️ [USER][GET PROFILE][BUSINESS]", {
+          userId,
+          message: error.message,
+          errors: error.errors,
+        });
+
+        const body = { message: error.message };
+        if (error.errors) body.errors = error.errors;
+        return res.status(error.statusCode).json(body);
+      }
+
+      console.error("💥 [USER][GET PROFILE][SYSTEM]", {
         userId,
         message: error.message,
       });
 
       return res.status(500).json({
-        message: "Failed to get user profile",
+        message: "Internal server error",
       });
     }
   },
@@ -56,7 +68,19 @@ const userController = {
         message: "Profile updated successfully",
       });
     } catch (error) {
-      console.error("💥 [USER][UPDATE PROFILE] Error", {
+      if (error.statusCode) {
+        console.warn("⚠️ [USER][UPDATE PROFILE][BUSINESS]", {
+          userId,
+          message: error.message,
+          errors: error.errors,
+        });
+
+        const body = { message: error.message };
+        if (error.errors) body.errors = error.errors;
+        return res.status(error.statusCode).json(body);
+      }
+
+      console.error("💥 [USER][UPDATE PROFILE][SYSTEM]", {
         userId,
         message: error.message,
         hasFile: !!file,
@@ -64,7 +88,6 @@ const userController = {
 
       return res.status(500).json({
         message: "Internal server error",
-        error: error.message,
       });
     }
   },
@@ -89,20 +112,19 @@ const userController = {
 
     } catch (error) {
 
-      if (error.field) {
-        console.warn("⚠️ [USER][RESET PASSWORD] Validation error", {
+      if (error.statusCode) {
+        console.warn("⚠️ [USER][RESET PASSWORD][BUSINESS]", {
           userId,
           message: error.message,
+          errors: error.errors,
         });
 
-        return res.status(400).json({
-          errors: {
-            [error.field]: error.message,
-          },
-        });
+        const body = { message: error.message };
+        if (error.errors) body.errors = error.errors;
+        return res.status(error.statusCode).json(body);
       }
 
-      console.error("💥 [USER][RESET PASSWORD] System error", {
+      console.error("💥 [USER][RESET PASSWORD][SYSTEM]", {
         userId,
         message: error.message,
       });

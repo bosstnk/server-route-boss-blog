@@ -38,7 +38,7 @@ app.use("/posts", postRouter)
 app.use("/posts", commentRouter);
 app.use("/posts", likeRouter);
 app.use("/categories", categoryRouter);
-app.use("/admin", notificationRouter)
+app.use("/notifications", notificationRouter)
 app.use("/admin", adminPostRouter)
 app.use("/auth", authRouter)
 app.use("/user", userRouter)

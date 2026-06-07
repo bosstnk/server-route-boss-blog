@@ -19,7 +19,7 @@ const postRepository = {
       INNER JOIN users on posts.user_id = users.id
       INNER JOIN categories ON posts.category_id = categories.id
       INNER JOIN statuses ON posts.status_id = statuses.id
-      WHERE statuses.status = 'publish'
+      WHERE statuses.status = 'Published'
     `;
 
     let values = [];
@@ -66,7 +66,7 @@ const postRepository = {
       FROM posts
       INNER JOIN categories ON posts.category_id = categories.id
       INNER JOIN statuses ON posts.status_id = statuses.id
-      WHERE statuses.status = 'publish'
+      WHERE statuses.status = 'Published'
     `;
 
     let values = [];
@@ -99,7 +99,7 @@ const postRepository = {
     return parseInt(result.rows[0].count, 10);
   },
 
-  getAdminPosts: async ({ category, keyword, limit, offset }) => {
+  getAdminPosts: async ({ category, keyword, status, limit, offset }) => {
     let query = `
       SELECT
         posts.id,
@@ -118,30 +118,29 @@ const postRepository = {
       INNER JOIN statuses ON posts.status_id = statuses.id
     `;
 
-    let values = [];
+    const conditions = [];
+    const values = [];
 
-    if (category && keyword) {
-      query += `
-        WHERE categories.name ILIKE $1
-        AND (
-          posts.title ILIKE $2
-          OR posts.description ILIKE $2
-          OR posts.content ILIKE $2
-        )
-      `;
-      values.push(`%${category}%`, `%${keyword}%`);
-    } else if (category) {
-      query += ` WHERE categories.name ILIKE $1`;
+    if (category) {
       values.push(`%${category}%`);
-    } else if (keyword) {
-      query += `
-        WHERE (
-          posts.title ILIKE $1
-          OR posts.description ILIKE $1
-          OR posts.content ILIKE $1
-        )
-      `;
+      conditions.push(`categories.name ILIKE $${values.length}`);
+    }
+
+    if (keyword) {
       values.push(`%${keyword}%`);
+      const idx = values.length;
+      conditions.push(
+        `(posts.title ILIKE $${idx} OR posts.description ILIKE $${idx} OR posts.content ILIKE $${idx})`
+      );
+    }
+
+    if (status) {
+      values.push(status);
+      conditions.push(`statuses.status = $${values.length}`);
+    }
+
+    if (conditions.length > 0) {
+      query += ` WHERE ${conditions.join(" AND ")}`;
     }
 
     query += `
@@ -156,7 +155,7 @@ const postRepository = {
     return result.rows;
   },
 
-  countAdminPosts: async ({ category, keyword }) => {
+  countAdminPosts: async ({ category, keyword, status }) => {
     let query = `
       SELECT COUNT(*)
       FROM posts
@@ -164,30 +163,29 @@ const postRepository = {
       INNER JOIN statuses ON posts.status_id = statuses.id
     `;
 
-    let values = [];
+    const conditions = [];
+    const values = [];
 
-    if (category && keyword) {
-      query += `
-        WHERE categories.name ILIKE $1
-        AND (
-          posts.title ILIKE $2
-          OR posts.description ILIKE $2
-          OR posts.content ILIKE $2
-        )
-      `;
-      values.push(`%${category}%`, `%${keyword}%`);
-    } else if (category) {
-      query += ` WHERE categories.name ILIKE $1`;
+    if (category) {
       values.push(`%${category}%`);
-    } else if (keyword) {
-      query += `
-        WHERE (
-          posts.title ILIKE $1
-          OR posts.description ILIKE $1
-          OR posts.content ILIKE $1
-        )
-      `;
+      conditions.push(`categories.name ILIKE $${values.length}`);
+    }
+
+    if (keyword) {
       values.push(`%${keyword}%`);
+      const idx = values.length;
+      conditions.push(
+        `(posts.title ILIKE $${idx} OR posts.description ILIKE $${idx} OR posts.content ILIKE $${idx})`
+      );
+    }
+
+    if (status) {
+      values.push(status);
+      conditions.push(`statuses.status = $${values.length}`);
+    }
+
+    if (conditions.length > 0) {
+      query += ` WHERE ${conditions.join(" AND ")}`;
     }
 
     const result = await connectionPool.query(query, values);
@@ -291,16 +289,32 @@ const postRepository = {
   },
 
   deletePostById: async (postId) => {
-    let query = `
-    DELETE FROM posts 
-    WHERE id = $1
-    RETURNING *;`
+    const client = await connectionPool.connect();
 
-    let values = [postId]
+    try {
+      await client.query("BEGIN");
 
-    const result = await connectionPool.query(query, values);
-    return result.rows[0];
-  }
+      // ลบ dependencies ทั้งหมดก่อน (กัน FK violation)
+      await client.query("DELETE FROM notifications WHERE post_id = $1", [postId]);
+      await client.query("DELETE FROM likes WHERE post_id = $1", [postId]);
+      await client.query("DELETE FROM comments WHERE post_id = $1", [postId]);
+
+      const result = await client.query(
+        "DELETE FROM posts WHERE id = $1 RETURNING *",
+        [postId]
+      );
+
+      await client.query("COMMIT");
+      return result.rows[0];
+
+    } catch (err) {
+      await client.query("ROLLBACK");
+      throw err;
+    } finally {
+      client.release();
+    }
+  },
+
 };
 
 export default postRepository;

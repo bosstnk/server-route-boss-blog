@@ -53,6 +53,17 @@ const userRepository = {
     await connectionPool.query(query, values);
   },
 
+  findByUsername: async (username) => {
+    const query = `
+      SELECT id, username
+      FROM users
+      WHERE username = $1
+    `;
+
+    const result = await connectionPool.query(query, [username]);
+    return result.rows[0];
+  },
+
   getUserWithPassword: async (id) => {
     const query = `
       SELECT id, password

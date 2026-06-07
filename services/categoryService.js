@@ -5,6 +5,8 @@ const categoryService = {
   getCategories: async (keyword) => {
     console.log("📝 [CATEGORY][GET] Start", { keyword });
 
+    keyword = keyword?.trim();
+
     const result = await categoryRepository.getCategories(keyword);
 
     console.log("✅ [CATEGORY][GET] Success", { count: result.length });
@@ -19,7 +21,7 @@ const categoryService = {
 
     if (!category) {
       console.warn("⚠️ [CATEGORY][GET_BY_ID] Not found", { id });
-      throw createError("Category not found", 404);
+      throw createError({ message: "Category not found", statusCode: 404 });
     }
 
     console.log("✅ [CATEGORY][GET_BY_ID] Success", { id });
@@ -30,8 +32,16 @@ const categoryService = {
   createCategory: async (name) => {
     console.log("📝 [CATEGORY][CREATE] Start", { name });
 
-    if (!name || name.trim() === "") {
-      throw createError("Category name is required", 400);
+    name = name.trim();
+
+    const existing = await categoryRepository.findByName(name);
+    if (existing) {
+      console.warn("⚠️ [CATEGORY][CREATE] Duplicate name", { name });
+      throw createError({
+        message: "Validation failed",
+        statusCode: 409,
+        errors: { name: "Category already exists" },
+      });
     }
 
     const category = await categoryRepository.createCategory(name);
@@ -44,15 +54,23 @@ const categoryService = {
   updateCategory: async (id, name) => {
     console.log("📝 [CATEGORY][UPDATE] Start", { id });
 
-    if (!name || name.trim() === "") {
-      throw createError("Category name is required", 400);
+    name = name.trim();
+
+    const existing = await categoryRepository.findByName(name);
+    if (existing && String(existing.id) !== String(id)) {
+      console.warn("⚠️ [CATEGORY][UPDATE] Duplicate name", { name });
+      throw createError({
+        message: "Validation failed",
+        statusCode: 409,
+        errors: { name: "Category already exists" },
+      });
     }
 
     const category = await categoryRepository.updateCategory(id, name);
 
     if (!category) {
       console.warn("⚠️ [CATEGORY][UPDATE] Not found", { id });
-      throw createError("Category not found", 404);
+      throw createError({ message: "Category not found", statusCode: 404 });
     }
 
     console.log("✅ [CATEGORY][UPDATE] Success", { id });
@@ -67,7 +85,7 @@ const categoryService = {
 
     if (!existing) {
       console.warn("⚠️ [CATEGORY][DELETE] Not found", { id });
-      throw createError("Category not found", 404);
+      throw createError({ message: "Category not found", statusCode: 404 });
     }
 
     await categoryRepository.deleteCategory(id);

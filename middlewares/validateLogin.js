@@ -1,18 +1,32 @@
 export default function validateLogin(req, res, next) {
   const { email, password } = req.body;
 
-  if (!email?.trim() || !password) {
+  const errors = {};
+
+  // Email
+  if (!email?.trim()) {
+    errors.email = "Please enter your email address";
+  } else if (
+    !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
+      email.toLowerCase()
+    )
+  ) {
+    errors.email =
+      "Please enter a valid email address";
+  }
+
+  // Password
+  if (!password) {
+    errors.password = "Please enter a password";
+  }
+
+  // Validation failed
+  if (Object.keys(errors).length > 0) {
     return res.status(400).json({
-      message: "Missing email or password",
+      message: "Validation failed",
+      errors,
     });
   }
 
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-  if (!emailRegex.test(email)) {
-    return res.status(400).json({
-      message: "Invalid email format",
-    });
-  }
   next();
 }

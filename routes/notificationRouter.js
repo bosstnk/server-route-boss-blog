@@ -5,9 +5,15 @@ import { protect } from "../middlewares/protect.js";
 const notificationRouter = Router();
 
 notificationRouter.get(
-  "/notifications",
+  "/",
   protect,
   notificationController.getNotifications
+);
+
+notificationRouter.patch(
+  "/read-all",
+  protect,
+  notificationController.markAllAsRead
 );
 
 export default notificationRouter;

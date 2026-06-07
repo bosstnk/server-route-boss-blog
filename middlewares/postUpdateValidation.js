@@ -1,8 +1,9 @@
 const postUpdateValidation = (req, res, next) => {
   const body = req.body;
+  const file = req.files?.imageFile?.[0];
 
-  // 1. ต้องมีอย่างน้อย 1 field
-  if (!body || Object.keys(body).length === 0) {
+  // 1. ต้องมีอย่างน้อย 1 field (รวมไฟล์ด้วย)
+  if ((!body || Object.keys(body).length === 0) && !file) {
     return res.status(400).json({
       message: "At least one field is required to update",
     });
@@ -28,61 +29,72 @@ const postUpdateValidation = (req, res, next) => {
     });
   }
 
-  // ===============================
-  // 3. TYPE + PARSE
-  // ===============================
+  const errors = {};
 
   // title
-  if (body.title !== undefined && typeof body.title !== "string") {
-    return res.status(400).json({ message: "Title must be a string" });
-  }
-
-  // image (optional)
-  if (body.image !== undefined && typeof body.image !== "string") {
-    return res.status(400).json({ message: "Image must be a string" });
+  if (body.title !== undefined) {
+    if (typeof body.title !== "string") {
+      errors.title = "Title must be a string";
+    } else if (!body.title.trim()) {
+      errors.title = "Please enter article title";
+    }
   }
 
   // category_id
   if (body.category_id !== undefined) {
     const parsedCategoryId = Number(body.category_id);
-
     if (isNaN(parsedCategoryId)) {
-      return res.status(400).json({
-        message: "Category id must be a number",
-      });
+      errors.category_id = "Please select a category";
+    } else {
+      body.category_id = parsedCategoryId;
     }
-
-    body.category_id = parsedCategoryId; // 👈 overwrite
   }
 
   // description
-  if (
-    body.description !== undefined &&
-    typeof body.description !== "string"
-  ) {
-    return res.status(400).json({
-      message: "Description must be a string",
-    });
+  if (body.description !== undefined) {
+    if (typeof body.description !== "string") {
+      errors.description = "Description must be a string";
+    } else if (!body.description.trim()) {
+      errors.description = "Please enter article introduction";
+    } else if (body.description.length > 120) {
+      errors.description = "Introduction must be less than 120 characters";
+    }
   }
 
   // content
-  if (body.content !== undefined && typeof body.content !== "string") {
-    return res.status(400).json({
-      message: "Content must be a string",
-    });
+  if (body.content !== undefined) {
+    if (typeof body.content !== "string") {
+      errors.content = "Content must be a string";
+    } else if (!body.content.trim()) {
+      errors.content = "Please enter article content";
+    }
   }
 
   // status_id
   if (body.status_id !== undefined) {
     const parsedStatusId = Number(body.status_id);
-
     if (isNaN(parsedStatusId)) {
-      return res.status(400).json({
-        message: "Status id must be a number",
-      });
+      errors.status_id = "Status is required";
+    } else {
+      body.status_id = parsedStatusId;
     }
+  }
 
-    body.status_id = parsedStatusId; // 👈 overwrite
+  // image (optional — เปลี่ยนรูปไม่บังคับ)
+  if (file) {
+    const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+    if (!allowedTypes.includes(file.mimetype)) {
+      errors.image = "Only JPG, PNG, WEBP are allowed";
+    } else if (file.size > 2 * 1024 * 1024) {
+      errors.image = "Image must be less than 2MB";
+    }
+  }
+
+  if (Object.keys(errors).length > 0) {
+    return res.status(400).json({
+      message: "Validation failed",
+      errors,
+    });
   }
 
   next();

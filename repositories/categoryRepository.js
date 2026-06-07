@@ -36,6 +36,18 @@ const categoryRepository = {
     return result.rows[0];
   },
 
+  findByName: async (name) => {
+    const query = `
+      SELECT id, name
+      FROM categories
+      WHERE LOWER(name) = LOWER($1)
+    `;
+
+    const result = await connectionPool.query(query, [name]);
+
+    return result.rows[0];
+  },
+
   createCategory: async (name) => {
     const query = `
       INSERT INTO categories (name)

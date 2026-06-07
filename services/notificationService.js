@@ -12,6 +12,14 @@ const notificationService = {
     return result;
   },
 
+  markAllAsRead: async (userId) => {
+    console.log("📝 [NOTIFICATION][MARK_ALL_READ] Start", { userId });
+
+    await notificationRepository.markAllAsRead(userId);
+
+    console.log("✅ [NOTIFICATION][MARK_ALL_READ] Success", { userId });
+  },
+
   notifyComment: async ({ postId, actorId, commentId }) => {
     console.log("📝 [NOTIFICATION][COMMENT] Start", { postId, actorId });
 

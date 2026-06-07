@@ -7,61 +7,66 @@ const postCreateValidation = (req, res, next) => {
     status_id,
   } = req.body;
 
-  // ===============================
-  // CONVERT TYPE
-  // ===============================
   const parsedCategoryId = Number(category_id);
   const parsedStatusId = Number(status_id);
+  const file = req.files?.imageFile?.[0];
 
-  // ===============================
-  // REQUIRED CHECK
-  // ===============================
-  if (!title) {
-    return res.status(400).json({ message: "Title is required" });
+  const errors = {};
+
+  if (!title?.trim()) {
+    errors.title = "Please enter article title";
   }
 
-  if (category_id === undefined || category_id === null || category_id === "") {
-    return res.status(400).json({ message: "Category id is required" });
+  if (
+    category_id === undefined ||
+    category_id === null ||
+    category_id === "" ||
+    isNaN(parsedCategoryId)
+  ) {
+    errors.category_id = "Please select a category";
   }
 
-  if (!description) {
-    return res.status(400).json({ message: "Description is required" });
+  if (!description?.trim()) {
+    errors.description = "Please enter article introduction";
+  } else if (typeof description !== "string") {
+    errors.description = "Description must be a string";
+  } else if (description.length > 120) {
+    errors.description = "Introduction must be less than 120 characters";
   }
 
-  if (!content) {
-    return res.status(400).json({ message: "Content is required" });
+  if (!content?.trim()) {
+    errors.content = "Please enter article content";
+  } else if (typeof content !== "string") {
+    errors.content = "Content must be a string";
   }
 
-  if (status_id === undefined || status_id === null || status_id === "") {
-    return res.status(400).json({ message: "Status id is required" });
+  if (
+    status_id === undefined ||
+    status_id === null ||
+    status_id === "" ||
+    isNaN(parsedStatusId)
+  ) {
+    errors.status_id = "Status is required";
   }
 
-  if (!req.files?.imageFile?.[0]) {
-    return res.status(400).json({ message: "Image is required" });
+  if (!file) {
+    errors.image = "Please upload a thumbnail image";
+  } else {
+    const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+    if (!allowedTypes.includes(file.mimetype)) {
+      errors.image = "Only JPG, PNG, WEBP are allowed";
+    } else if (file.size > 2 * 1024 * 1024) {
+      errors.image = "Image must be less than 2MB";
+    }
   }
 
-  // ===============================
-  // TYPE CHECK
-  // ===============================
-  if (isNaN(parsedCategoryId)) {
-    return res.status(400).json({ message: "Category id must be a number" });
+  if (Object.keys(errors).length > 0) {
+    return res.status(400).json({
+      message: "Validation failed",
+      errors,
+    });
   }
 
-  if (isNaN(parsedStatusId)) {
-    return res.status(400).json({ message: "Status id must be a number" });
-  }
-
-  if (typeof description !== "string") {
-    return res.status(400).json({ message: "Description must be a string" });
-  }
-
-  if (typeof content !== "string") {
-    return res.status(400).json({ message: "Content must be a string" });
-  }
-
-  // ===============================
-  // OPTIONAL: overwrite body ให้เป็น number จริง
-  // ===============================
   req.body.category_id = parsedCategoryId;
   req.body.status_id = parsedStatusId;
 

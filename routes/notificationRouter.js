@@ -5,13 +5,13 @@ import { protect } from "../middlewares/protect.js";
 const notificationRouter = Router();
 
 notificationRouter.get(
-  "/notifications",
+  "/",
   protect,
   notificationController.getNotifications
 );
 
 notificationRouter.patch(
-  "/notifications/read-all",
+  "/read-all",
   protect,
   notificationController.markAllAsRead
 );

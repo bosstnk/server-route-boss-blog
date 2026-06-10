@@ -1,6 +1,7 @@
 import 'dotenv/config'
 import express from "express";
 import cors from "cors";
+import connectionPool from "./utils/db.mjs";
 import postRouter from './routes/postRouter.js';
 import authRouter from './routes/authRouter.js';
 import userRouter from './routes/userRouter.js';
@@ -32,6 +33,17 @@ app.use(express.json());
 
 app.get("/", (req, res) => {
   res.send("Hello TechUp!");
+});
+
+app.get("/health", async (_req, res) => {
+  try {
+    await connectionPool.query("SELECT 1");
+    console.log("✅ [HEALTH] DB ping ok");
+    res.json({ status: "ok" });
+  } catch (error) {
+    console.error("💥 [HEALTH] DB ping failed", { message: error.message });
+    res.status(500).json({ status: "error" });
+  }
 });
 
 app.use("/posts", postRouter)

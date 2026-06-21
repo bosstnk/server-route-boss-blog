@@ -14,6 +14,16 @@ const categoryService = {
     return result;
   },
 
+  getPopularCategories: async () => {
+    console.log("📝 [CATEGORY][GET_POPULAR] Start");
+
+    const result = await categoryRepository.getPopularCategories();
+
+    console.log("✅ [CATEGORY][GET_POPULAR] Success", { count: result.length });
+
+    return result;
+  },
+
   getCategoryById: async (id) => {
     console.log("📝 [CATEGORY][GET_BY_ID] Start", { id });
 

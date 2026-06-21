@@ -8,6 +8,8 @@ const categoryRouter = Router();
 
 categoryRouter.get("/", categoryController.getCategories);
 
+categoryRouter.get("/popular", categoryController.getPopularCategories);
+
 categoryRouter.get("/:id",protect, isAdmin, categoryController.getCategoryById);
 
 categoryRouter.post("/", protect, isAdmin, validateCategory, categoryController.createCategory);

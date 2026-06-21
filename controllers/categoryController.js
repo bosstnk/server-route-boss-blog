@@ -27,6 +27,30 @@ const categoryController = {
     }
   },
 
+  getPopularCategories: async (req, res) => {
+    console.log("📝 [CATEGORY][GET_POPULAR][REQUEST]");
+
+    try {
+      const categories = await categoryService.getPopularCategories();
+
+      console.log("✅ [CATEGORY][GET_POPULAR][RESPONSE]");
+
+      return res.json(categories);
+    } catch (error) {
+      if (error.statusCode) {
+        console.warn("⚠️ [CATEGORY][GET_POPULAR][BUSINESS]", {
+          message: error.message,
+          errors: error.errors,
+        });
+        const body = { message: error.message };
+        if (error.errors) body.errors = error.errors;
+        return res.status(error.statusCode).json(body);
+      }
+      console.error("💥 [CATEGORY][GET_POPULAR][SYSTEM]", { message: error.message });
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  },
+
   getCategoryById: async (req, res) => {
     const { id } = req.params;
     console.log("📝 [CATEGORY][GET_BY_ID][REQUEST]", { id });

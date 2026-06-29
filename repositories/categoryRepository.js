@@ -23,6 +23,23 @@ const categoryRepository = {
     return result.rows;
   },
 
+  getPopularCategories: async () => {
+
+    const query = `
+      SELECT c.id, c.name,
+             COUNT(p.id) FILTER (WHERE st.status = 'Published')::int AS post_count
+      FROM categories c
+      LEFT JOIN posts p     ON p.category_id = c.id
+      LEFT JOIN statuses st ON st.id = p.status_id
+      GROUP BY c.id, c.name
+      ORDER BY post_count DESC, c.id
+    `;
+
+    const result = await connectionPool.query(query);
+
+    return result.rows;
+  },
+
   getCategoryById: async (id) => {
 
     const query = `
